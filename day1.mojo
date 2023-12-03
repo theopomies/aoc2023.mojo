@@ -1,4 +1,3 @@
-from sys import argv
 from builtin.string import isdigit
 from utils.static_tuple import StaticTuple
 
@@ -6,8 +5,8 @@ from helpers.string import read_file, split_lines_to_slices, Slices
 from helpers.vector import map_vector, reduce_vector, sum
 
 
-fn day1() raises:
-    let input_file_name = argv()[1]
+fn day1(args: VariadicList[StringRef]) raises:
+    let input_file_name = args[1]
     let input_file = read_file(input_file_name)
     let input_file_lines_slices = split_lines_to_slices(input_file)
 

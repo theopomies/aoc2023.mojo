@@ -87,3 +87,19 @@ fn reduce_vector[
 
 fn sum(lhs: Int, rhs: Int) -> Int:
     return lhs + rhs
+
+
+fn for_each_vector[
+    T: AnyType
+](vector: DynamicVector[T], callback: fn (elem: T) capturing -> NoneType):
+    for i in range(len(vector)):
+        let elem = vector[i]
+        callback(elem)
+
+
+fn for_each_vector[
+    T: AnyType
+](vector: DynamicVector[T], callback: fn (elem: T) raises capturing -> NoneType) raises:
+    for i in range(len(vector)):
+        let elem = vector[i]
+        callback(elem)

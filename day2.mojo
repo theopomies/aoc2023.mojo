@@ -1,4 +1,3 @@
-from sys import argv
 from math import max
 
 from helpers.string import (
@@ -52,8 +51,7 @@ struct GameInfo:
         return game_info
 
 
-fn day2() raises:
-    let args = argv()
+fn day2(args: VariadicList[StringRef]) raises:
     if len(args) != 5:
         print(
             "Day 2 expects 4 cli args in this order: inputFile, red balls, green balls,"
