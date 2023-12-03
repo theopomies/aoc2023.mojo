@@ -1,6 +1,6 @@
-# AoC2023 🔥
+# AoC2023.🔥
 
-Welcome to Advent of Code 2023! This repository contains my solutions to the coding challenges from the Advent of Code event in 2023.
+Welcome to Advent of Code 2023! This repository contains my solutions **pure** Mojo to the coding challenges from the Advent of Code event in 2023.
 
 ## Table of Contents
 
@@ -15,7 +15,9 @@ Advent of Code is an annual coding event that takes place during the month of De
 
 ## Solutions
 
-In this repository, you will find my solutions to the Advent of Code 2023 challenges. Each day's solution is organized in a separate folder, with the code and any necessary input files.
+In this repository, you will find my solutions to the Advent of Code 2023 challenges. Each day's solution is organized in its own mojo source file and imported in `main.mojo`, any necessary input files is found in the day's folder.
+
+The solutions are in **pure** Mojo, meaning I'd rather have it look procedural like C than use an `from python import Python` and use python modules or python code.
 
 ## Usage
 
