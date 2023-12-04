@@ -1,5 +1,5 @@
 fn filter_vector[
-    T: AnyType
+    T: CollectionElement
 ](vector: DynamicVector[T], predicate: fn (elem: T) capturing -> Bool) -> DynamicVector[
     T
 ]:
@@ -13,8 +13,21 @@ fn filter_vector[
     return filtered_vector
 
 
+fn filter_vector[
+    T: CollectionElement
+](vector: DynamicVector[T], predicate: fn (elem: T) -> Bool) -> DynamicVector[T]:
+    var filtered_vector = DynamicVector[T](capacity=len(vector))
+
+    for i in range(len(vector)):
+        let elem = vector[i]
+        if predicate(elem):
+            filtered_vector.push_back(elem)
+
+    return filtered_vector
+
+
 fn map_vector[
-    T: AnyType, O: AnyType
+    T: CollectionElement, O: CollectionElement
 ](vector: DynamicVector[T], mapping_fn: fn (elem: T) capturing -> O) -> DynamicVector[
     O
 ]:
@@ -28,7 +41,33 @@ fn map_vector[
 
 
 fn map_vector[
-    T: AnyType, O: AnyType
+    T: CollectionElement, O: CollectionElement
+](
+    vector: DynamicVector[T], mapping_fn: fn (elem: T) raises -> O
+) raises -> DynamicVector[O]:
+    var mapped_vector = DynamicVector[O](capacity=len(vector))
+
+    for i in range(len(vector)):
+        let elem = mapping_fn(vector[i])
+        mapped_vector.push_back(elem)
+
+    return mapped_vector
+
+
+fn map_vector[
+    T: CollectionElement, O: CollectionElement
+](vector: DynamicVector[T], mapping_fn: fn (elem: T) -> O) -> DynamicVector[O]:
+    var mapped_vector = DynamicVector[O](capacity=len(vector))
+
+    for i in range(len(vector)):
+        let elem = mapping_fn(vector[i])
+        mapped_vector.push_back(elem)
+
+    return mapped_vector
+
+
+fn map_vector[
+    T: CollectionElement, O: CollectionElement
 ](
     vector: DynamicVector[T], mapping_fn: fn (elem: T) raises capturing -> O
 ) raises -> DynamicVector[O]:
@@ -42,7 +81,7 @@ fn map_vector[
 
 
 fn reduce_vector[
-    T: AnyType, O: AnyType
+    T: CollectionElement, O: CollectionElement
 ](vector: DynamicVector[T], initial_value: O, reducer: fn (elem: T, acc: O) -> O,) -> O:
     var acc = initial_value
 
@@ -54,7 +93,7 @@ fn reduce_vector[
 
 
 fn reduce_vector[
-    T: AnyType, O: AnyType
+    T: CollectionElement, O: CollectionElement
 ](
     vector: DynamicVector[T],
     initial_value: O,
@@ -70,7 +109,7 @@ fn reduce_vector[
 
 
 fn reduce_vector[
-    T: AnyType, O: AnyType
+    T: CollectionElement, O: CollectionElement
 ](
     vector: DynamicVector[T],
     initial_value: O,
@@ -90,7 +129,7 @@ fn sum(lhs: Int, rhs: Int) -> Int:
 
 
 fn for_each_vector[
-    T: AnyType
+    T: CollectionElement
 ](vector: DynamicVector[T], callback: fn (elem: T) capturing -> NoneType):
     for i in range(len(vector)):
         let elem = vector[i]
@@ -98,7 +137,7 @@ fn for_each_vector[
 
 
 fn for_each_vector[
-    T: AnyType
+    T: CollectionElement
 ](vector: DynamicVector[T], callback: fn (elem: T) raises capturing -> NoneType) raises:
     for i in range(len(vector)):
         let elem = vector[i]

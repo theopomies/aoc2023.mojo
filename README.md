@@ -21,7 +21,7 @@ The solutions are in **pure** Mojo, meaning I'd rather have it look procedural l
 
 ## Usage
 
-To run the solutions, you will need [Mojo](https://docs.modular.com/mojo/) 0.5.1 installed on your machine. Simply import to the desired day's function in `main.mojo` and execute it with the right command line arguments.
+To run the solutions, you will need [Mojo](https://docs.modular.com/mojo/) 0.6.0 installed on your machine. Simply import to the desired day's function in `main.mojo` and execute it with the right command line arguments.
 
 ## License
 See [LICENSE.md](LICENSE.md) for the license information.

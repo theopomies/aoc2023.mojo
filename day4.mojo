@@ -1,5 +1,45 @@
-from helpers.string import read_file, split_lines_to_slices, split_to_slices, Slices
+from helpers.io import read_file
 from helpers.vector import map_vector, reduce_vector, filter_vector, sum
+
+
+fn is_not_empty_string(s: String) -> Bool:
+    return s != ""
+
+
+@value
+struct Card(CollectionElement):
+    var winning_numbers: Int
+
+    @staticmethod
+    fn from_full_card_line(card_line: String) raises -> Self:
+        return Self.from_full_card_numbers(card_line.split(": ")[1])
+
+    @staticmethod
+    fn from_full_card_numbers(full_card_numbers: String) raises -> Self:
+        let full_numbers = full_card_numbers.split(" | ")
+        let winning_numbers_as_str = filter_vector[String](
+            full_numbers[0].split(" "), is_not_empty_string
+        )
+        let card_numbers_as_str = filter_vector[String](
+            full_numbers[1].split(" "), is_not_empty_string
+        )
+        var winning_numbers = DynamicVector[Int](capacity=len(winning_numbers_as_str))
+        var card_numbers = DynamicVector[Int](capacity=len(card_numbers_as_str))
+
+        for i in range(len(winning_numbers_as_str)):
+            winning_numbers.push_back(atol(winning_numbers_as_str[i]))
+        for i in range(len(card_numbers_as_str)):
+            card_numbers.push_back(atol(card_numbers_as_str[i]))
+
+        var count = 0
+
+        for i in range(len(winning_numbers)):
+            for j in range(len(card_numbers)):
+                if winning_numbers[i] == card_numbers[j]:
+                    count += 1
+                    break
+
+        return Self(count)
 
 
 fn day4(args: VariadicList[StringRef]) raises:
@@ -7,103 +47,35 @@ fn day4(args: VariadicList[StringRef]) raises:
         print("Usage, ./main <filename>")
         raise Error("Invalid args")
 
-    let file_input = read_file(args[1])
-    let cards_slices = split_lines_to_slices(file_input)
+    let cards_lines = read_file(args[1]).split("\n")
+    let cards = map_vector[String, Card](cards_lines, Card.from_full_card_line)
 
-    fn remove_card_number(card_slice: slice) -> slice:
-        let substr_slice = split_to_slices(file_input[card_slice], ": ")[1]
-        let start = substr_slice.start + card_slice.start
-        let end = substr_slice.end + card_slice.start
-        return slice(start, end)
-
-    let card_infos = map_vector[slice, slice](cards_slices, remove_card_number)
-
-    fn split_card_infos_reducer(
-        card_infos: slice, owned split_cards_slices: DynamicVector[Tuple[slice, slice]]
-    ) raises -> DynamicVector[Tuple[slice, slice]]:
-        return split_cards_slices ^
-
-    """ This must be done proceduraly with a for-loop since:
-        - `map_vector` cannot resolve a viable candidate: https://github.com/modularml/mojo/issues/1366
-        - `for_each`'s callback needs to capture the `DynamicVector[Tuple[slice, slice]]`
-        and it errors for "mutating an rvalue of type `DynamicVector[Tuple[slice, slice]]`" (cryptic)
-        - `reduce_vector` cannot resolve either and errors with:
-        "candidate not viable: result cannot bind generic !mlirtype to memory-only type 'DynamicVector[Tuple[slice, slice]]'"
-    """
-    var card_infos_split = DynamicVector[Tuple[slice, slice]](capacity=len(card_infos))
-    for i in range(len(card_infos)):
-        let card_info = file_input[card_infos[i]]
-        var slices = split_to_slices(card_info, " | ")
-
-        if len(slices) != 2:
-            raise Error("Invalid card line:" + card_info)
-
-        slices[0].start += card_infos[i].start
-        slices[1].start += card_infos[i].start
-        slices[0].end += card_infos[i].start
-        slices[1].end += card_infos[i].start
-
-        card_infos_split.push_back(Tuple(slices[0], slices[1]))
-
-    fn count_winning_numbers_in_card(card_infos: Tuple[slice, slice]) raises -> Int:
-        let winning_numbers_line = file_input[card_infos.get[0, slice]()]
-        let card_numbers_line = file_input[card_infos.get[1, slice]()]
-
-        # Prevents the lines like "  1" with padding to break the algo
-        fn is_not_empty_slice(s: slice) -> Bool:
-            return s.end != s.start
-
-        # Using this to try higher order functions that way
-        fn slice_to_int(base: String) -> fn (s: slice) raises capturing -> Int:
-            fn _slice_to_int(s: slice) raises -> Int:
-                return atol(base[s])
-
-            return _slice_to_int
-
-        let winning_numbers = map_vector[slice, Int](
-            filter_vector(
-                split_to_slices(winning_numbers_line, " "), is_not_empty_slice
-            ),
-            slice_to_int(winning_numbers_line),
-        )
-        let card_numbers = map_vector[slice, Int](
-            filter_vector(split_to_slices(card_numbers_line, " "), is_not_empty_slice),
-            slice_to_int(card_numbers_line),
-        )
-
-        fn number_is_winning(number: Int) -> Bool:
-            for i in range(len(winning_numbers)):
-                if winning_numbers[i] == number:
-                    return True
-            return False
-
-        return len(filter_vector(card_numbers, number_is_winning))
-
-    let winning_numbers_in_each_card = map_vector[Tuple[slice, slice], Int](
-        card_infos_split, count_winning_numbers_in_card
-    )
-
-    print("Part1:", part1(winning_numbers_in_each_card))
-    print("Part2:", part2(winning_numbers_in_each_card))
+    print("Part1:", part1(cards))
+    print("Part2:", part2(cards))
 
 
-fn part1(winning_numbers_in_each_card: DynamicVector[Int]) -> Int:
-    fn sum_card_value(winning_numbers_in_card: Int, acc: Int) -> Int:
-        if not winning_numbers_in_card:
-            return acc
-        return acc + 2 ** (winning_numbers_in_card - 1)
+fn part1(cards: DynamicVector[Card]) -> Int:
+    var total = 0
+    for i in range(len(cards)):
+        let card = cards[i]
+        if not card.winning_numbers:
+            continue
+        total += 2 ** (card.winning_numbers - 1)
+    return total
 
-    return reduce_vector(winning_numbers_in_each_card, 0, sum_card_value)
 
-
-fn part2(winning_numbers_in_each_card: DynamicVector[Int]) -> Int:
-    var card_counts = DynamicVector[Int](capacity=len(winning_numbers_in_each_card))
-    for i in range(len(winning_numbers_in_each_card)):
+fn part2(cards: DynamicVector[Card]) -> Int:
+    var card_counts = DynamicVector[Int](capacity=len(cards))
+    for i in range(len(cards)):
         card_counts.push_back(1)
 
-    for i in range(len(winning_numbers_in_each_card)):
-        let winning_numbers = winning_numbers_in_each_card[i]
+    for i in range(len(cards)):
+        let winning_numbers = cards[i].winning_numbers
         for c in range(winning_numbers):
             card_counts[i + c + 1] += card_counts[i]
 
-    return reduce_vector(card_counts, 0, sum)
+    var total = 0
+    for i in range(len(card_counts)):
+        total += card_counts[i]
+
+    return total
