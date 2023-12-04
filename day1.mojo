@@ -1,47 +1,30 @@
 from builtin.string import isdigit
 from utils.static_tuple import StaticTuple
 
-from helpers.string import read_file, split_lines_to_slices, Slices
+from helpers.io import read_file
 from helpers.vector import map_vector, reduce_vector, sum
 
 
 fn day1(args: VariadicList[StringRef]) raises:
     let input_file_name = args[1]
-    let input_file = read_file(input_file_name)
-    let input_file_lines_slices = split_lines_to_slices(input_file)
+    let input_file_lines = read_file(input_file_name).split("\n")
 
-    print("Part1:", part1(input_file, input_file_lines_slices))
-    print("Part2:", part2(input_file, input_file_lines_slices))
-
-
-fn part1(input_file: String, input_file_lines_slices: Slices) raises -> Int:
-    @parameter
-    fn line_mapper(line_slice: slice) raises -> Int:
-        let line = input_file[line_slice]
-
-        var first: String = ""
-        var last: String = ""
-
-        for i in range(len(line)):
-            let candidate = line[i]
-
-            if isdigit(candidate._buffer[0]):
-                if not first:
-                    first = candidate
-                else:
-                    last = candidate
-
-        return atol(first + (last or first))
-
-    let values = map_vector[slice, Int](input_file_lines_slices, line_mapper)
-    return reduce_vector[Int, Int](values, 0, sum)
+    print("Part1:", part1(input_file_lines))
+    print("Part2:", part2(input_file_lines))
 
 
-fn part2(input_file: String, input_file_lines_slices: Slices) raises -> Int:
-    @parameter
-    fn line_mapper(line_slice: slice) raises -> Int:
-        let line = input_file[line_slice]
+fn part1(lines: DynamicVector[String]) raises -> Int:
+    return compute_lines_sum(lines, True)
 
+
+fn part2(lines: DynamicVector[String]) raises -> Int:
+    return compute_lines_sum(lines, False)
+
+
+fn compute_lines_sum(lines: DynamicVector[String], only_numeric: Bool) raises -> Int:
+    var total = 0
+    for i in range(len(lines)):
+        let line = lines[i]
         var first = 0
         var last = 0
         var value = 0
@@ -49,24 +32,26 @@ fn part2(input_file: String, input_file_lines_slices: Slices) raises -> Int:
         for i in range(len(line)):
             let substr = line[i : i + 5]
 
-            if value := str_to_i(substr):
+            if value := str_to_i(substr, only_numeric):
                 if not first:
                     first = value
                 else:
                     last = value
 
-        return first * 10 + (last or first)
+        total += first * 10 + (last or first)
 
-    let values = map_vector[slice, Int](input_file_lines_slices, line_mapper)
-    return reduce_vector[Int, Int](values, 0, sum)
+    return total
 
 
-fn str_to_i(str: String) raises -> Int:
+fn str_to_i(str: String, only_numeric: Bool) raises -> Int:
     let digit_strings = StaticTuple[9](
         "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"
     )
     if isdigit(str._buffer[0]):
         return atol(str[0])
+
+    if only_numeric:
+        return 0
 
     for i in range(digit_strings.__len__()):
         let digit = digit_strings[i]
