@@ -1,105 +1,80 @@
-from helpers.string import read_file, split_lines_to_slices, Slices, for_each_string_slice
-from helpers.vector import for_each_vector, filter_vector, reduce_vector, map_vector
+from helpers.io import read_file
+from helpers.vector import filter_vector
 
 # Note: This is very suboptimal, we traverse the vectors too much atm
-
 fn day3(args: VariadicList[StringRef]) raises:
-    let input_file = read_file(args[1])
-    let input_lines_slices = split_lines_to_slices(input_file)
+    let input_file_lines = read_file(args[1]).split("\n")
     var symbols = DynamicVector[Symbol]()
     var part_numbers = DynamicVector[PartNumber]()
 
-    @parameter
-    fn handle_line(line: String, y: Int) raises:
+    for y in range(len(input_file_lines)):
+        let line = input_file_lines[y]
         let length = len(line)
         var x = 0
-        let value: Int
+        let value: String
 
         while x < length:
             let candidate = line[x:]
 
-            if value := str_to_i(candidate):
+            if value := scan_str_for_i(candidate):
                 let offset = len(value)
-                part_numbers.push_back(PartNumber {
-                    pos: Position {
-                        x_beg: x,
-                        x_end: x + offset - 1,
-                        y: y
-                    },
-                    value: value
-                })
+                part_numbers.push_back(PartNumber(
+                    pos=Position(
+                        x,
+                        x + offset - 1,
+                        y
+                    ),
+                    value=atol(value)
+                ))
                 x += offset
                 continue
             elif Symbol.is_symbol(candidate):
-                symbols.push_back(Symbol {
-                    pos: Position {
-                        x_beg: x,
-                        x_end: x,
-                        y: y
-                    },
-                    is_gear_symbol: Symbol.check_gear_symbol(candidate),
-                    adjacent_parts: 0,
-                    gear_ratio: 0
-                })
+                symbols.push_back(Symbol(
+                    pos= Position (
+                        x_beg= x,
+                        x_end= x,
+                        y= y
+                ),
+                    is_gear_symbol= Symbol.check_gear_symbol(candidate),
+                    adjacent_parts= 0,
+                    gear_ratio= 0
+                ))
             x += 1
-
-    for_each_string_slice(input_file, input_lines_slices, handle_line)
 
     print("Part1:", part1(symbols, part_numbers))
     print("Part2:", part2(symbols, part_numbers))
 
-fn part1(symbols: DynamicVector[Symbol], part_numbers: DynamicVector[PartNumber]) raises -> Int:
-    @parameter
-    fn is_valid_part(pn: PartNumber) -> Bool:
-        @parameter
-        fn is_adjacent_symbol(symbol: Symbol) -> Bool:
-            return pn.is_adjacent(symbol.pos)
+fn part1(symbols: DynamicVector[Symbol], part_numbers: DynamicVector[PartNumber]) -> Int:
+    var total = 0
 
-        let adjacent_symbols = filter_vector(symbols, is_adjacent_symbol)
-         
-        return len(adjacent_symbols) > 0
+    for i in range(len(part_numbers)):
+        let pn = part_numbers[i]
+        for j in range(len(symbols)):
+            let symbol = symbols[j]
+            if pn.is_adjacent(symbol.pos):
+                total += pn.value
+                break
 
-
-    let valid_part_numbers = filter_vector(part_numbers, is_valid_part)
-
-    fn sum_part_number(pn: PartNumber, acc: Int) -> Int:
-        return acc + pn.value
-
-    return reduce_vector(valid_part_numbers, 0, sum_part_number)
+    return total
 
 fn part2(symbols: DynamicVector[Symbol], part_numbers: DynamicVector[PartNumber]) raises -> Int:
     fn is_gear_symbol(symbol: Symbol) -> Bool: return symbol.is_gear_symbol
-    let gear_symbols = filter_vector(symbols, is_gear_symbol)
+    var gear_symbols = filter_vector(symbols, is_gear_symbol)
+    var total = 0
+    for i in range(len(gear_symbols)):
+        var pn_count = 0
+        var gear_ratio = 1
+        for j in range(len(part_numbers)):
+            let part_number = part_numbers[j]
+            if part_number.is_adjacent(gear_symbols[i].pos):
+                pn_count += 1
+                gear_ratio *= part_number.value
+        if pn_count == 2:
+            total += gear_ratio
+    return total
 
-    fn count_and_multiply_adjacent_parts(symbol: Symbol) -> Symbol:
-        @parameter
-        fn is_adjacent_symbol(pn: PartNumber) -> Bool:
-            return pn.is_adjacent(symbol.pos)
-
-        let adjacent_parts = filter_vector(part_numbers, is_adjacent_symbol)
-        var updated_symbol = symbol
-        updated_symbol.adjacent_parts = len(adjacent_parts)
-        
-        fn mul_values(part_number: PartNumber, acc: Int) -> Int:
-            return acc * part_number.value
-
-        updated_symbol.gear_ratio = reduce_vector(adjacent_parts, 1, mul_values)
-
-        return updated_symbol^
-
-    let updated_gear_symbols = map_vector[Symbol, Symbol](gear_symbols, count_and_multiply_adjacent_parts)
-
-    fn symbol_is_gear(symbol: Symbol) -> Bool:
-        return symbol.adjacent_parts == 2
-    let valid_gears = filter_vector(updated_gear_symbols, symbol_is_gear)
-    
-    fn sum_gear_ratios(symbol: Symbol, acc: Int) -> Int:
-        return acc + symbol.gear_ratio
-
-    return reduce_vector(valid_gears, 0, sum_gear_ratios)
-
-@register_passable("trivial")
-struct Symbol:
+@value
+struct Symbol(CollectionElement):
     var pos: Position
     var is_gear_symbol: Bool
     var adjacent_parts: Int
@@ -118,15 +93,15 @@ struct Symbol:
         return candidate_char == "*"
 
 
-@register_passable("trivial")
-struct Position:
+@value
+struct Position(CollectionElement):
     var x_beg: Int
     var x_end: Int
     var y: Int
 
 
-@register_passable("trivial")
-struct PartNumber:
+@value
+struct PartNumber(CollectionElement):
     var value: Int
     var pos: Position
 
@@ -138,7 +113,7 @@ struct PartNumber:
 
         return is_close_verticaly and is_close_horizontaly
 
-fn str_to_i(string: String) raises -> Int:
+fn scan_str_for_i(string: String) -> String:
     var end = 0
 
     for i in range(len(string)):
@@ -147,6 +122,6 @@ fn str_to_i(string: String) raises -> Int:
         end += 1 
 
     if not end:
-        return 0
+        return ""
     
-    return atol(string[:end])
+    return string[:end]

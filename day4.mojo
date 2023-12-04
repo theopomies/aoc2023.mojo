@@ -1,5 +1,5 @@
 from helpers.io import read_file
-from helpers.vector import map_vector, reduce_vector, filter_vector, sum
+from helpers.vector import map_vector, filter_vector
 
 
 fn is_not_empty_string(s: String) -> Bool:
