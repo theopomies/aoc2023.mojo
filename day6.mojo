@@ -22,11 +22,7 @@ fn part1(
     for i in range(1, len(times)):
         let max_time = atol(times[i])
         let distance_record = atol(distance_records[i])
-        var possible_distances = 0
-        for pressed_time in range(max_time):
-            let distance = get_distance(pressed_time, max_time)
-            if distance > distance_record:
-                possible_distances += 1
+        let possible_distances = get_races_possibilities(max_time, distance_record)
         if not total:
             total = 1
         if possible_distances:
@@ -45,11 +41,16 @@ fn part2(
 
     let distance_record_number = atol(distance_record)
     let max_time_number = atol(max_time)
+    return get_races_possibilities(max_time_number, distance_record_number)
+
+
+@always_inline
+fn get_races_possibilities(max_time: Int, record_distance: Int) -> Int:
     var total = 0
 
-    for pressed_time in range(max_time_number):
-        let distance = get_distance(pressed_time, max_time_number)
-        if distance > distance_record_number:
+    for pressed_time in range(max_time):
+        let distance = get_distance(pressed_time, max_time)
+        if distance > record_distance:
             total += 1
 
     return total
