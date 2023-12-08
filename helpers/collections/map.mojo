@@ -3,6 +3,20 @@ trait NaiveMapKeyable(CollectionElement, Stringable):
 
 
 @value
+struct StringKey(NaiveMapKeyable):
+    var _string: String
+
+    fn __init__(inout self, string: String):
+        self._string = string
+
+    fn __init__(inout self, string: StringLiteral):
+        self._string = string
+
+    fn __str__(self) -> String:
+        return self._string
+
+
+@value
 struct NaiveMap[K: NaiveMapKeyable, V: CollectionElement](Sized, CollectionElement):
     """Doesn't support deletion."""
 
@@ -46,6 +60,12 @@ struct NaiveMap[K: NaiveMapKeyable, V: CollectionElement](Sized, CollectionEleme
                 return self._values[i]
 
         raise Error('KeyError, key "' + key_str + '" not found.')
+
+    fn keys(self) -> DynamicVector[String]:
+        var keys = DynamicVector[String](len(self._keys))
+        for i in range(len(self._keys)):
+            keys.push_back(str(self._keys[i]))
+        return keys
 
 
 ############### BTreeMap ###############
