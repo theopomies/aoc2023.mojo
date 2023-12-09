@@ -7,7 +7,8 @@ from day4 import day4
 from day5 import day5
 from day6 import day6
 from day7 import day7
-from day8 import day8 as day
+from day8 import day8
+from day9 import day9 as day
 
 from python import Python
 
